@@ -1,0 +1,13 @@
+cd frontend
+npm run dev 
+
+cd backend
+node src/server.js
+
+cd workout-ai-service
+.\venv\Scripts\activate
+flask run
+
+cd stt-ai-service
+.\venv\Scripts\activate
+python stt_app.py
