@@ -1,99 +1,162 @@
-# Filename: stt_app.py
-# STT Service using OpenAI Whisper (local, offline, accurate)
+
+# stt-ai-service/app.py
+# FitAI Speech-to-Text Service
+# Flask + OpenAI Whisper + FFmpeg
+# Designed for local development and Render deployment
+
+import os
+import shutil
+import tempfile
+import time
+import traceback
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pydub import AudioSegment
 import whisper
-import os
-import tempfile
-import time
-import traceback
+
 
 # ============================================================
-# FFMPEG PATHS
+# FLASK APP CONFIGURATION
 # ============================================================
-FFMPEG_DIR = r"C:\Users\samya\Downloads\ffmpeg-8.1-essentials_build\ffmpeg-8.1-essentials_build\bin"
-
-AudioSegment.converter = os.path.join(FFMPEG_DIR, "ffmpeg.exe")
-AudioSegment.ffmpeg    = os.path.join(FFMPEG_DIR, "ffmpeg.exe")
-AudioSegment.ffprobe   = os.path.join(FFMPEG_DIR, "ffprobe.exe")
-
-os.environ["PATH"]          += os.pathsep + FFMPEG_DIR
-os.environ["FFMPEG_BINARY"]  = AudioSegment.ffmpeg
-os.environ["FFPROBE_BINARY"] = AudioSegment.ffprobe
-
-print(f"✅ FFmpeg  : {AudioSegment.ffmpeg}")
-print(f"✅ FFprobe : {AudioSegment.ffprobe}")
-
-# ============================================================
-# LOAD WHISPER MODEL ONCE at startup
-# ============================================================
-print("⏳ Loading Whisper model...")
-whisper_model = whisper.load_model("base")
-print("✅ Whisper model loaded — ready to transcribe")
 
 app = Flask(__name__)
 CORS(app)
 
+# Limit uploaded audio size to 20 MB.
+app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
+
 
 # ============================================================
-# HELPER — safe temp file delete with retry
+# FFMPEG CONFIGURATION
+# Works on Windows and Linux, including Render.
 # ============================================================
+
+ffmpeg_path = shutil.which("ffmpeg")
+ffprobe_path = shutil.which("ffprobe")
+
+if not ffmpeg_path or not ffprobe_path:
+    raise RuntimeError(
+        "FFmpeg and FFprobe were not found. "
+        "Install FFmpeg and make sure both commands are on PATH."
+    )
+
+AudioSegment.converter = ffmpeg_path
+AudioSegment.ffmpeg = ffmpeg_path
+AudioSegment.ffprobe = ffprobe_path
+
+print(f"FFmpeg: {ffmpeg_path}")
+print(f"FFprobe: {ffprobe_path}")
+
+
+# ============================================================
+# LOAD WHISPER MODEL ONCE AT STARTUP
+# ============================================================
+
+MODEL_NAME = os.getenv("WHISPER_MODEL", "base")
+
+print(f"Loading Whisper model: {MODEL_NAME} ...")
+whisper_model = whisper.load_model(MODEL_NAME)
+print("Whisper model loaded successfully.")
+
+
+# ============================================================
+# HELPER: SAFELY DELETE TEMPORARY FILES
+# ============================================================
+
 def safe_delete(path):
     for _ in range(3):
         try:
             if path and os.path.exists(path):
                 os.remove(path)
             return
-        except Exception:
+        except OSError:
             time.sleep(0.3)
 
 
 # ============================================================
-# /stt  POST — receives audio blob, returns transcribed text
+# ROOT ENDPOINT
 # ============================================================
+
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({
+        "service": "FitAI Speech-to-Text API",
+        "status": "running",
+        "health_endpoint": "/health",
+        "transcription_endpoint": "/stt"
+    })
+
+
+# ============================================================
+# HEALTH CHECK
+# GET /health
+# ============================================================
+
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({
+        "status": "ok",
+        "model": f"whisper-{MODEL_NAME}",
+        "engine": "openai-whisper"
+    }), 200
+
+
+# ============================================================
+# SPEECH-TO-TEXT ENDPOINT
+# POST /stt
+# Expects multipart/form-data with field name "audio".
+# Returns: {"text": "recognized words"}
+# ============================================================
+
 @app.route("/stt", methods=["POST"])
 def transcribe_audio():
-    input_path  = None
+    input_path = None
     output_path = None
 
     try:
-        # ── 1. Validate request
+        # 1. Validate uploaded audio
         if "audio" not in request.files:
-            return jsonify({"error": "No audio file provided"}), 400
+            return jsonify({
+                "error": "No audio file provided. Use the form field 'audio'."
+            }), 400
 
         audio_file = request.files["audio"]
 
-        if audio_file.filename == "":
-            return jsonify({"error": "Empty audio file"}), 400
+        if not audio_file.filename:
+            return jsonify({"error": "Empty audio filename."}), 400
 
-        # ── 2. Save uploaded file to input temp file
-        with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as inp:
-            input_path = inp.name
+        # 2. Save uploaded audio to a temporary file
+        with tempfile.NamedTemporaryFile(
+            suffix=".webm",
+            delete=False
+        ) as input_file:
+            input_path = input_file.name
             audio_file.save(input_path)
 
-        # Guard: reject suspiciously small recordings
         file_size = os.path.getsize(input_path)
-        print(f"📦 Received audio: {file_size} bytes")
+        print(f"Received audio: {file_size} bytes")
 
         if file_size < 1500:
             return jsonify({
-                "error": "Recording too short. Hold the button and speak clearly."
+                "error": "Recording is too short. Please speak clearly and try again."
             }), 400
 
-        # ── 3. Convert to 16kHz mono WAV (Whisper requirement)
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as out:
-            output_path = out.name
+        # 3. Convert the audio to mono, 16 kHz WAV
+        with tempfile.NamedTemporaryFile(
+            suffix=".wav",
+            delete=False
+        ) as output_file:
+            output_path = output_file.name
 
         sound = AudioSegment.from_file(input_path)
-        sound = sound.set_channels(1)       # mono
-        sound = sound.set_frame_rate(16000) # 16kHz — Whisper native rate
+        sound = sound.set_channels(1)
+        sound = sound.set_frame_rate(16000)
         sound.export(output_path, format="wav")
 
-        print(f"🎵 Converted to WAV: {output_path}")
+        print("Audio conversion completed.")
 
-        # ── 4. Transcribe with Whisper
+        # 4. Transcribe using Whisper
         result = whisper_model.transcribe(
             output_path,
             language="en",
@@ -101,44 +164,51 @@ def transcribe_audio():
             temperature=0.0,
             best_of=1,
             condition_on_previous_text=False,
-            no_speech_threshold=0.6,          # ignores low-confidence audio
-            logprob_threshold=-1.0,           # filters noise transcriptions
+            no_speech_threshold=0.6,
+            logprob_threshold=-1.0,
             compression_ratio_threshold=2.4
         )
 
-        text = result.get("text", "").strip()
-        print(f"✅ Transcribed: '{text}'")
+        recognized_text = result.get("text", "").strip()
+        print(f"Transcription: {recognized_text!r}")
 
-        # Reject noise artifacts (too short = not real speech)
-        if not text or len(text.split()) < 3:
+        # 5. Validate transcription
+        if not recognized_text or len(recognized_text.split()) < 3:
             return jsonify({
                 "error": "Could not detect clear speech. Please speak louder and try again."
             }), 400
 
-        return jsonify({"text": text})
+        return jsonify({"text": recognized_text}), 200
 
-    except Exception as e:
-        print(f"❌ STT Error: {e}")
+    except Exception as error:
+        print(f"STT error: {error}")
         traceback.print_exc()
-        return jsonify({"error": f"Transcription failed: {str(e)}"}), 500
+
+        return jsonify({
+            "error": "Transcription failed. Please try again."
+        }), 500
 
     finally:
-        # Always clean up both temp files
         safe_delete(input_path)
         safe_delete(output_path)
 
 
 # ============================================================
-# HEALTH CHECK
+# HANDLE LARGE UPLOADS
 # ============================================================
-@app.route("/health", methods=["GET"])
-def health():
-    return jsonify({
-        "status": "ok",
-        "model":  "whisper-base",
-        "engine": "openai-whisper"
-    })
 
+@app.errorhandler(413)
+def file_too_large(_error):
+    return jsonify({
+        "error": "Audio file is too large. Maximum size is 20 MB."
+    }), 413
+
+
+# ============================================================
+# LOCAL DEVELOPMENT
+# Render runs this application using Gunicorn.
+# ============================================================
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=False)
+    port = int(os.getenv("PORT", "5001"))
+    app.run(host="0.0.0.0", port=port, debug=False)
