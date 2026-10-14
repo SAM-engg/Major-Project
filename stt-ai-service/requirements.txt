@@ -1,0 +1,4 @@
+Flask
+gunicorn
+faster-whisper
+python-multipart
