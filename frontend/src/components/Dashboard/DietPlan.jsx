@@ -17,7 +17,7 @@ const DietPlan = () => {
     setError("");
     try {
       const token = localStorage.getItem("token");
-      const res   = await fetch("http://localhost:5000/api/fitness/diet", {
+      const res   = await fetch(`${API_URL}/api/fitness/diet`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -56,7 +56,7 @@ const DietPlan = () => {
   const logMeal = async (item, index) => {
     try {
       const token = localStorage.getItem("token");
-      await fetch("http://localhost:5000/api/progress/meal", {
+      await fetch(`${API_URL}/api/progress/meal`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ meal: item.time, calories: Number(item.calories) })

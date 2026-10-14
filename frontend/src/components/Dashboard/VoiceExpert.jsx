@@ -89,7 +89,7 @@ const VoiceExpert = () => {
     try {
       const token = localStorage.getItem("token");
       // Use chat endpoint for text queries
-      const res = await fetch("http://localhost:5000/api/expert/chat", {
+      const res = await fetch(`${API_URL}/api/expert/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -148,7 +148,7 @@ const VoiceExpert = () => {
         form.append("audio", blob, "voice.webm");
 
         const token = localStorage.getItem("token");
-        const res   = await fetch("http://localhost:5000/api/expert/voice", {
+        const res   = await fetch(`${API_URL}/api/expert/voice`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: form

@@ -1,6 +1,8 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { API_URL } from "../../config";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -19,7 +21,7 @@ const Login = () => {
     setMessage("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -35,6 +37,7 @@ const Login = () => {
       localStorage.setItem("token", data.token);
       navigate("/dashboard");
     } catch (err) {
+      console.error("Login error:", err);
       setError("Server error. Try again later.");
     }
   };
@@ -47,7 +50,7 @@ const Login = () => {
 
     try {
       const res = await fetch(
-        "http://localhost:5000/api/auth/forgot-password",
+        `${API_URL}/api/auth/forgot-password`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -65,6 +68,7 @@ const Login = () => {
       setMessage("Reset link generated. Check backend console.");
       setIsForgot(false);
     } catch (err) {
+      console.error("Forgot password error:", err);
       setError("Server error. Try again later.");
     }
   };
@@ -88,7 +92,8 @@ const Login = () => {
 
         {error && (
           <div className="mb-4 flex items-center gap-2 text-red-400 bg-red-400/10 p-3 rounded-xl">
-            <AlertCircle size={16} /> {error}
+            <AlertCircle size={16} />
+            {error}
           </div>
         )}
 
@@ -107,9 +112,9 @@ const Login = () => {
             type="email"
             placeholder="Email Address"
             required
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white
-                       focus:border-purple-500 outline-none transition-all"
+            className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-all"
           />
 
           {/* PASSWORD */}
@@ -119,16 +124,21 @@ const Login = () => {
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 required
+                value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white
-                           focus:border-purple-500 outline-none transition-all"
+                className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-all"
               />
+
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? (
+                  <EyeOff size={18} />
+                ) : (
+                  <Eye size={18} />
+                )}
               </button>
             </div>
           )}
@@ -136,9 +146,7 @@ const Login = () => {
           {/* BUTTON */}
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600
-                       text-white font-bold py-3 rounded-xl hover:scale-[1.02]
-                       transition-all shadow-lg shadow-purple-500/20"
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-xl hover:scale-[1.02] transition-all shadow-lg shadow-purple-500/20"
           >
             {isForgot ? "Send Reset Link" : "Login"}
           </button>
@@ -148,7 +156,11 @@ const Login = () => {
         <div className="text-center text-gray-500 mt-6 text-sm">
           {isForgot ? (
             <span
-              onClick={() => setIsForgot(false)}
+              onClick={() => {
+                setIsForgot(false);
+                setError("");
+                setMessage("");
+              }}
               className="text-purple-400 cursor-pointer font-bold"
             >
               Back to Login
@@ -156,7 +168,11 @@ const Login = () => {
           ) : (
             <>
               <span
-                onClick={() => setIsForgot(true)}
+                onClick={() => {
+                  setIsForgot(true);
+                  setError("");
+                  setMessage("");
+                }}
                 className="text-purple-400 cursor-pointer font-bold block mb-2"
               >
                 Forgot password?

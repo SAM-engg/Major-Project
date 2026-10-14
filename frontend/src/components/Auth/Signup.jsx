@@ -1,6 +1,8 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { API_URL } from "../../config";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -26,9 +28,11 @@ const Signup = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/register", {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
@@ -43,9 +47,10 @@ const Signup = () => {
         return;
       }
 
-      // Save JWT
+      // Registration successful: go to login
       navigate("/login");
     } catch (err) {
+      console.error("Signup error:", err);
       setError("Server error. Try again later.");
     }
   };
@@ -67,7 +72,8 @@ const Signup = () => {
 
         {error && (
           <div className="mb-4 flex items-center gap-2 text-red-400 bg-red-400/10 p-3 rounded-xl">
-            <AlertCircle size={16} /> {error}
+            <AlertCircle size={16} />
+            {error}
           </div>
         )}
 
@@ -78,11 +84,11 @@ const Signup = () => {
             type="text"
             placeholder="Full Name"
             required
+            value={formData.name}
             onChange={(e) =>
               setFormData({ ...formData, name: e.target.value })
             }
-            className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white
-                       focus:border-purple-500 outline-none transition-all"
+            className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-all"
           />
 
           {/* EMAIL */}
@@ -90,11 +96,11 @@ const Signup = () => {
             type="email"
             placeholder="Email Address"
             required
+            value={formData.email}
             onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
             }
-            className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white
-                       focus:border-purple-500 outline-none transition-all"
+            className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-all"
           />
 
           {/* PASSWORD */}
@@ -103,16 +109,18 @@ const Signup = () => {
               type={showPass ? "text" : "password"}
               placeholder="Password"
               required
+              value={formData.password}
               onChange={(e) =>
                 setFormData({ ...formData, password: e.target.value })
               }
-              className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white
-                         focus:border-purple-500 outline-none transition-all"
+              className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-all"
             />
+
             <button
               type="button"
               onClick={() => setShowPass(!showPass)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+              aria-label={showPass ? "Hide password" : "Show password"}
             >
               {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -124,16 +132,20 @@ const Signup = () => {
               type={showRePass ? "text" : "password"}
               placeholder="Re-enter Password"
               required
+              value={formData.rePassword}
               onChange={(e) =>
                 setFormData({ ...formData, rePassword: e.target.value })
               }
-              className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white
-                         focus:border-purple-500 outline-none transition-all"
+              className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-all"
             />
+
             <button
               type="button"
               onClick={() => setShowRePass(!showRePass)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+              aria-label={
+                showRePass ? "Hide confirm password" : "Show confirm password"
+              }
             >
               {showRePass ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -142,14 +154,13 @@ const Signup = () => {
           {/* BUTTON */}
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600
-                       text-white font-bold py-3 rounded-xl hover:scale-[1.02]
-                       transition-all shadow-lg shadow-purple-500/20"
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-xl hover:scale-[1.02] transition-all shadow-lg shadow-purple-500/20"
           >
             Sign Up
           </button>
         </form>
 
+        {/* FOOTER LINKS */}
         <p className="text-center text-gray-500 mt-6 text-sm">
           Already have an account?{" "}
           <span

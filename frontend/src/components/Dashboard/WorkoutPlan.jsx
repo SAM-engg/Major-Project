@@ -15,7 +15,7 @@ const WorkoutPlan = () => {
 
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:5000/api/fitness/plan", {
+        const res = await fetch(`${API_URL}/api/fitness/plan`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -107,7 +107,7 @@ const WorkoutPlan = () => {
  onClick={async ()=>{
   const token = localStorage.getItem("token");
 
-  await fetch("http://localhost:5000/api/progress/workout",{
+  await fetch(`${API_URL}/api/progress/workout`,{
     method:"POST",
     headers:{
       "Content-Type":"application/json",

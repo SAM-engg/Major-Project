@@ -73,7 +73,7 @@ const MUSCLE_GROUPS = [
         return;
       }
 
-    const res = await fetch("http://localhost:5000/api/auth/me", {
+    const res = await fetch(`${API_URL}/api/auth/me`, {
   headers: {
     Authorization: `Bearer ${token}`,
   },
@@ -113,7 +113,7 @@ useEffect(()=>{
 
     const token = localStorage.getItem("token")
 
-    const res = await fetch("http://localhost:5000/api/progress/calories",{
+    const res = await fetch(`${API_URL}/api/progress/calories`,{
       headers:{Authorization:`Bearer ${token}`}
     })
 
@@ -158,7 +158,7 @@ useEffect(() => {
       }
 
       const token = localStorage.getItem("token");
-      const res   = await fetch("http://localhost:5000/api/fitness/plan", {
+      const res   = await fetch(`${API_URL}/api/fitness/plan`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -231,7 +231,7 @@ const handleProfileSave = async (e) => {
   try {
     const token = localStorage.getItem("token");
 
-    const res = await fetch("http://localhost:5000/api/auth/update", {
+    const res = await fetch(`${API_URL}/api/auth/update`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -278,7 +278,7 @@ const handleGoalSave = async (newGoal) => {
   try {
     const token = localStorage.getItem("token");
 
-    const res = await fetch("http://localhost:5000/api/auth/update", {
+    const res = await fetch(`${API_URL}/api/auth/update`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -296,7 +296,7 @@ const handleGoalSave = async (newGoal) => {
     localStorage.removeItem("workoutGoal");
 
     // Also tell backend to clear old DB plan
-    await fetch("http://localhost:5000/api/fitness/regenerate", {
+    await fetch(`${API_URL}/api/fitness/regenerate`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -322,7 +322,7 @@ const handleMuscleSelect = async (muscle) => {
   setLoadingWorkout(true);
   try {
     const token = localStorage.getItem("token");
-    const res   = await fetch("http://localhost:5000/api/fitness/day-workout", {
+    const res   = await fetch(`${API_URL}/api/fitness/day-workout`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ dayKey: selectedDayKey || "day1", muscleGroup: muscle })
