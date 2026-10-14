@@ -6,7 +6,7 @@ import {
   Mic, MessageSquare, Flame, CheckCircle, ChevronRight, 
   Droplets, Zap, Info, History, Save, Mail, Calendar
 } from 'lucide-react';
-import { API_URL } from "../config";
+import { API_URL } from "../../config";
 
 const Dashboard = () => {
   

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Utensils, Flame, Loader2, RefreshCw, CheckCircle, Clock } from "lucide-react";
-import { API_URL } from "../config";
+import { API_URL } from "../../config";
 
 const MEAL_CALORIES = { Breakfast: 420, Lunch: 650, Dinner: 550, Snacks: 220 };
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Calendar, Dumbbell, Clock } from "lucide-react";
-import { API_URL } from "../config";
+import { API_URL } from "../../config";
 const WorkoutPlan = () => {
 
   const navigate = useNavigate();
