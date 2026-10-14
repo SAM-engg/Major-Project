@@ -6,7 +6,7 @@ const axios       = require("axios");
 // ✅ CHANGE MODEL HERE ONLY — affects entire file
 // ============================================================
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const AI_MODEL       = "meta-llama/llama-3-8b-instruct";
+const AI_MODEL       = "openrouter/free";
 // Other options: "meta-llama/llama-3-8b-instruct" | "mistralai/mistral-7b-instruct"
 
 const callAI = async (prompt) => {

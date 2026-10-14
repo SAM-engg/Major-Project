@@ -9,7 +9,7 @@ const FitnessPlan  = require("../models/FitnessPlan");
 // ✅ CHANGE MODEL HERE ONLY — affects entire file
 // ============================================================
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const AI_MODEL       = "meta-llama/llama-3-8b-instruct";
+const AI_MODEL       = "openrouter/free";
 // Other options: "meta-llama/llama-3-8b-instruct" | "mistralai/mistral-7b-instruct"
 
 const PYTHON_STT_URL = "http://localhost:5001/stt";
@@ -90,10 +90,19 @@ STRICT REPLY FORMAT:
 
     return res.json({ reply });
 
-  } catch (err) {
-    console.error("Chat error:", err.message);
-    return res.status(500).json({ error: "Chat error. Please try again." });
-  }
+  } 
+  catch (err) {
+  console.error("Chat error:", err.message);
+  console.error("HTTP status:", err.response?.status);
+  console.error(
+    "OpenRouter response:",
+    JSON.stringify(err.response?.data, null, 2)
+  );
+
+  return res.status(500).json({
+    error: "Chat error. Please try again."
+  });
+}
 };
 
 // ============================================================
