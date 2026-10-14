@@ -1,8 +1,8 @@
 
 FROM python:3.11-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
@@ -15,6 +15,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py .
 
-EXPOSE 10000
-
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-10000} --workers 1 --timeout 180 app:app"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 1 --timeout 300 app:app"]
