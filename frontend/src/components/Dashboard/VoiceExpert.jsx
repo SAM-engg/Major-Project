@@ -4,6 +4,7 @@ import {
   ArrowLeft, Mic, MicOff, Volume2, VolumeX,
   Loader2, User, Bot, Square, Send
 } from "lucide-react";
+import { API_URL } from "../config";
 
 const VoiceExpert = () => {
   const navigate = useNavigate();
